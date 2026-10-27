@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chargers Wildcard Scenarios</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one scoreboard-style column. Two outcome cards on top, then the 16-team field, then the editable math. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --ink:#101828; --muted:#566176; --line:#d5dbe6; --tint:#e4e9f2;
+  --navy:#14284b; --accent:#f5b301; --on-accent:#14284b; --riv:#fff2c4;
+  --good:#1b7f4a; --warn:#94560a; --bad:#b83232;
+  --display:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
+  --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1322; --surface:#131f38; --ink:#e9eff9; --muted:#94a3be; --line:#25355a; --tint:#1b2a4a;
+    --navy:#0b1322; --accent:#f5b301; --on-accent:#14284b; --riv:#3b3010;
+    --good:#4cc38a; --warn:#f0b44a; --bad:#ff7a7a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1322; --surface:#131f38; --ink:#e9eff9; --muted:#94a3be; --line:#25355a; --tint:#1b2a4a;
+  --navy:#0b1322; --accent:#f5b301; --on-accent:#14284b; --riv:#3b3010;
+  --good:#4cc38a; --warn:#f0b44a; --bad:#ff7a7a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  font-variant-numeric:tabular-nums}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;line-height:1.05}
+h1{font-size:44px;letter-spacing:.01em;text-transform:uppercase}
+h2{font-size:25px;letter-spacing:.02em;text-transform:uppercase}
+p{margin:0}
+.eyebrow{font-family:var(--display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:14px;color:var(--muted)}
+.sub{color:var(--muted);max-width:60ch}
+header{display:flex;flex-direction:column;gap:8px}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hint{color:var(--muted);font-size:14px;max-width:62ch}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:2px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card:focus-visible,.pill:focus-visible,summary:focus-visible,select:focus-visible,input:focus-visible,.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.card .lbl{display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chip{font-family:var(--body);font-size:11px;letter-spacing:.08em;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--tint);color:var(--muted)}
+.card[aria-pressed="true"] .chip{background:var(--accent);color:var(--on-accent)}
+.big{font-family:var(--display);font-weight:700;font-size:54px;line-height:1}
+.delta{font-size:15px;font-weight:600;margin-left:8px}
+.up{color:var(--good)}.down{color:var(--bad)}
+.rec{color:var(--muted);font-size:14px}
+.status{font-weight:600}
+.status.in{color:var(--good)}.status.edge{color:var(--warn)}.status.out{color:var(--bad)}
+.seedline{font-size:14px;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.kv{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.kv:last-child{border-bottom:0;padding-bottom:0}
+.kv b{font-weight:600}
+
+.matches{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.match{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;min-width:0}
+.side{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:7px 12px;min-width:0}
+.side+.side{border-top:1px solid var(--line)}
+.side .sd{font-family:var(--display);font-weight:700;font-size:24px;line-height:1;text-align:center}
+.side .nm{min-width:0;overflow-wrap:anywhere}
+.side .nm small{display:block;color:var(--muted);font-size:12px}
+.side .av{font-weight:600}
+.side.riv{background:var(--riv);box-shadow:inset 4px 0 0 var(--accent)}
+.tag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:1px 6px;border-radius:3px;background:var(--tint);color:var(--muted);margin-left:6px;vertical-align:1px}
+.tag.host{background:var(--navy);color:#fff}
+:root[data-theme="dark"] .tag.host{background:var(--accent);color:var(--on-accent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tag.host{background:var(--accent);color:var(--on-accent)}}
+
+.pool{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pool li{display:grid;grid-template-columns:28px 1fr auto;gap:8px;padding:6px 12px;border-bottom:1px solid var(--line);align-items:center}
+.pool li.cut{border-bottom:2px solid var(--accent)}
+.pool li.riv{background:var(--riv)}
+.pool li:last-child{border-bottom:0}
+.pool .rk{font-family:var(--display);font-weight:700;font-size:20px;text-align:center}
+
+.winners{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.win{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.win label{font-family:var(--display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:15px;color:var(--muted)}
+select,input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px;min-width:0;max-width:100%}
+input[type=number]{width:4.2rem;text-align:center;padding:4px 2px}
+input.avg{width:6.2rem}
+.note{color:var(--muted);font-size:12.5px}
+.locked{font-weight:600;padding:6px 0}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:0}
+summary{cursor:pointer;padding:12px 16px;font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.04em;text-transform:uppercase;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--body);color:var(--muted)}
+details[open] summary::after{content:"\2212"}
+.inner{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.scroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--tint)}
+td.n,th.n{text-align:right}
+tr.pend td{background:var(--riv)}
+tfoot td{font-weight:600;border-bottom:0}
+.dv{display:inline-block;min-width:22px;text-align:center;border-radius:3px;background:var(--tint);padding:0 5px;font-weight:600}
+.btn{font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:7px 12px;align-self:flex-start}
+.notes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+a{color:inherit}
+@media (prefers-reduced-motion: no-preference){.card{transition:border-color .15s}}
+@media (max-width:420px){h1{font-size:38px}.big{font-size:48px}}
+</style>
+
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Class D1 volleyball &middot; Wildcard points</p>
+    <h1>Riverside Chargers</h1>
+    <p class="sub">NSAA numbers as of Mon Oct 26, 10:00 pm CT, plus six Monday results NSAA had not entered yet. Riverside beat Fullerton in the opener. The sub-district final is Tue Oct 27 against Elgin Public-Pope John at Cedar Rapids.</p>
+  </header>
+
+  <section>
+    <h2>Tuesday vs Elgin</h2>
+    <div class="cards" id="cards"></div>
+    <p class="hint">Tap a card to run the rest of the page under that result. Both cards assume the highest-rated team wins every other sub-district, which you can change below.</p>
+  </section>
+
+  <section>
+    <h2>Saturday district final</h2>
+    <div class="panel" id="sat"></div>
+  </section>
+
+  <section>
+    <h2>The 16-team field</h2>
+    <p class="hint">12 sub-district winners plus the 4 best averages among everyone else. Seeded by average, 1 plays 16, 2 plays 15, and the higher seed hosts.</p>
+    <div class="matches" id="matches"></div>
+  </section>
+
+  <section>
+    <h2>At-large race</h2>
+    <p class="hint">Best averages among teams that do not win a sub-district. The top four get in.</p>
+    <div class="match"><ul class="pool" id="pool"></ul></div>
+  </section>
+
+  <section>
+    <h2>Sub-district winners</h2>
+    <p class="hint">Only teams still alive after Monday are listed. Pick who wins Tuesday's final. Riverside's sub-district follows the Tuesday card you selected.</p>
+    <div class="winners" id="winners"></div>
+  </section>
+
+  <details id="calcbox">
+    <summary>Riverside's points game by game</summary>
+    <div class="inner">
+      <p class="hint">Each win or loss is worth points based on the opponent's record. Change an opponent's record to see how the total moves if they finish the season differently. Edits here flow through everything above.</p>
+      <div class="scroll"><table id="calc"></table></div>
+      <button class="btn" id="resetgames" type="button">Reset to NSAA records</button>
+    </div>
+  </details>
+
+  <details>
+    <summary>Adjust other teams' averages</summary>
+    <div class="inner">
+      <p class="hint">Averages are as of tonight and do not include matches still to be played in other sub-districts. Type a new average to test a rival moving up or down.</p>
+      <div class="scroll"><table id="avgs"></table></div>
+      <button class="btn" id="resetavgs" type="button">Reset all averages</button>
+    </div>
+  </details>
+
+  <details class="notes">
+    <summary>What is in tonight's numbers</summary>
+    <div class="inner">
+      <ul>
+        <li>Averages and records come from NSAA as of 10:00 pm Monday.</li>
+        <li>Six Monday results were not in NSAA yet and were added from your score photos: BDS over Deshler, Tri County over Diller-Odell, Cambridge over Dundy County Stratton, Wauneta-Palisade over Southwest, Loomis over Arapahoe, and Axtell over Southern Valley.</li>
+        <li>North Central vs Creighton (D1-7) and Red Cloud vs Axtell (D1-10) were not in the photos or in NSAA. Pick the Monday winner in those two sub-district cards.</li>
+        <li>ScoreFeed and NSAA disagree on two matches. ScoreFeed has Falls City Sacred Heart beating Humboldt-Table Rock-Steinauer and Kimball beating Garden County. NSAA has the opposite in both, and NSAA's own Tuesday bracket lists Garden County vs Bayard. This page follows NSAA.</li>
+        <li>Each Tuesday final adds one match to both finalists' averages, using the other team's record after the match.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="notes">
+    <summary>How the points work</summary>
+    <div class="inner">
+      <ul>
+        <li>A win is worth 50, 47, 44 or 41 points depending on whether the opponent is a 1st, 2nd, 3rd or 4th division team. A loss is worth 39, 36, 33 or 30.</li>
+        <li>Division comes from the opponent's win percentage: 75% or better is 1st, 50% to 75% is 2nd, 25% to 50% is 3rd, under 25% is 4th.</li>
+        <li>Opponents one class above D1 add 2 points, two classes above add 3. Smaller classes never subtract.</li>
+        <li>Average is total points divided by matches played. Divisions use opponents' current records, so Riverside's total can shift as opponents finish their seasons.</li>
+        <li>Ties in average go to head-to-head, then most 1st division opponents, then opponents' combined win percentage.</li>
+        <li>Source: <a href="https://secure.nsaahome.org/wildcards/points/index.php?class=D1&amp;sport=vb" target="_blank" rel="noopener">NSAA D1 volleyball wildcard points</a> and the 2026-27 NSAA Volleyball Manual.</li>
+      </ul>
+    </div>
+  </details>
+</main>
+
+<script>
+const WIN={1:50,2:47,3:44,4:41},LOSS={1:39,2:36,3:33,4:30},BONUS={D1:0,D2:0,C2:2,C1:3};
+const div=(w,l)=>{const g=w+l;if(!g)return 4;const p=w/g;return p>=0.75?1:p>=0.5?2:p>=0.25?3:4;};
+const ELGIN='Elgin Public-Pope John',BDS='Bruning-Davenport-Shickley (BDS)',TCNE='Tri County Northeast (TCNE)',NOW_AVG=44.8333;
+const SDS=['D1-1','D1-2','D1-3','D1-4','D1-5','D1-6','D1-7','D1-8','D1-9','D1-10','D1-11','D1-12'];
+const TEAMS=[
+['Amherst','D1-9',24,4,46.0],['Central Valley','D1-9',29,1,45.8667],['Riverside','D1-8',26,4,44.8333],['Bloomfield','D1-6',27,0,44.7778],
+['North Central','D1-7',24,5,44.5862],['Tri County','D1-2',21,8,44.5172],['Cambridge','D1-11',22,6,44.3214],['Arapahoe','D1-10',21,5,44.2692],
+['Wauneta-Palisade','D1-11',24,5,44.1724],['Red Cloud','D1-10',23,5,44.1071],['Osceola','D1-4',23,5,43.7857],['Ansley-Litchfield','D1-9',21,9,43.7667],
+['Dundy County Stratton','D1-11',21,7,43.6071],['Clarkson','D1-5',19,12,43.2258],['Exeter-Milligan-Friend','D1-3',22,9,43.1613],['Plainview','D1-7',18,11,42.8276],
+['Falls City Sacred Heart','D1-1',19,13,42.625],['Garden County','D1-12',23,7,42.3667],['Loomis','D1-10',17,12,42.2414],[BDS,'D1-2',17,11,42.2143],
+['Deshler','D1-2',18,9,42.1111],['Ainsworth','D1-7',18,12,42.1],[ELGIN,'D1-8',16,14,42.1],['Leigh','D1-5',20,10,41.7667],
+['Pleasanton','D1-9',14,15,41.2759],['Lourdes Central Catholic','D1-1',16,15,41.2258],['College View Academy','D1-3',18,12,40.8],['Hemingford','D1-12',15,14,40.7931],
+[TCNE,'D1-6',16,11,40.6667],['Bayard','D1-12',14,12,40.5385],['Weeping Water','D1-1',12,20,40.4688],['Diller-Odell','D1-2',10,17,40.2593],
+['Hartington-Newcastle','D1-6',12,18,40.0333],['Southwest','D1-11',13,16,39.931],['Winside','D1-6',14,16,39.3333],['Aquinas Catholic','D1-4',7,24,39.2903],
+['Pawnee City','D1-1',10,13,39.2609],['Lyons-Decatur Northeast','D1-5',11,20,39.2258],['Cross County','D1-4',11,22,39.1818],['Niobrara-Verdigre','D1-7',10,18,39.0714],
+['Humboldt-Table Rock-Steinauer','D1-1',11,19,39.0333],['Creighton','D1-7',12,16,39.0],['Axtell','D1-10',9,19,38.5714],['Twin River','D1-8',11,20,38.5484],
+['Nebraska Lutheran','D1-3',10,18,38.1786],['Palmer','D1-9',10,20,38.1],['Kimball','D1-12',6,24,38.0667],['Gordon-Rushville','D1-12',5,26,37.7097],
+['Fullerton','D1-8',6,19,37.32],['East Butler','D1-4',6,23,36.931],['Southern Valley','D1-10',2,25,36.6296],['Walthill','D1-5',5,17,36.5],
+['Randolph','D1-6',3,24,35.4444],['Newman Grove/St. Edward','D1-8',4,25,35.2759],['McCool Junction','D1-3',1,26,34.6667]
+];
+const D1=TEAMS.map(([n,sd,w,l,a])=>({n,sd,w,l,a}));
+/* Monday results NSAA had not entered at 10:00 pm, taken from the score photos: [winner, loser] */
+const PEND=[[BDS,'Deshler'],['Tri County','Diller-Odell'],['Cambridge','Dundy County Stratton'],['Wauneta-Palisade','Southwest'],['Loomis','Arapahoe'],['Axtell','Southern Valley']];
+/* Tuesday finalists per sub-district. D1-7 and D1-10 still have one Monday match nobody reported. */
+const FIN={
+ 'D1-1':['Lourdes Central Catholic','Humboldt-Table Rock-Steinauer'],'D1-2':['Tri County',BDS],'D1-3':['Exeter-Milligan-Friend','Nebraska Lutheran'],
+ 'D1-4':['Osceola','Aquinas Catholic'],'D1-5':['Clarkson','Leigh'],'D1-6':['Bloomfield',TCNE],
+ 'D1-7':{other:'Ainsworth',pend:['North Central','Creighton']},'D1-8':['Riverside',ELGIN],'D1-9':['Amherst','Central Valley'],
+ 'D1-10':{other:'Loomis',pend:['Red Cloud','Axtell']},'D1-11':['Cambridge','Wauneta-Palisade'],'D1-12':['Garden County','Bayard']
+};
+const NOTE={'D1-1':'ScoreFeed shows Falls City Sacred Heart winning. NSAA has Humboldt-Table Rock-Steinauer.','D1-12':'ScoreFeed shows Kimball beating Garden County. NSAA has Garden County.',
+ 'D1-7':'North Central vs Creighton was not reported. Pick the Monday winner.','D1-10':'Red Cloud vs Axtell was not reported. Pick the Monday winner.'};
+const GAMES=[
+['Aug 27','Chambers-Wheeler Central','D2',17,13,'W'],['Sep 1','High Plains Community','D2',10,19,'W'],['Sep 1','Twin River','D1',11,20,'W'],
+['Sep 3','Fullerton','D1',6,19,'W'],['Sep 3','Central Valley','D1',29,1,'L'],['Sep 8','Grand Island Lutheran','D2',16,12,'W'],
+['Sep 8','Elba','D2',20,9,'W'],['Sep 10','Arcadia/Loup City','C2',17,13,'W'],['Sep 12','Humphrey-Lindsay','C2',20,12,'W'],
+['Sep 12','Tri County','D1',21,8,'L'],['Sep 12','Kenesaw','C2',22,7,'W'],['Sep 15','Leigh','D1',20,10,'W'],
+['Sep 15','Stuart','D2',11,20,'W'],['Sep 17','Archangels Catholic','D2',16,13,'W'],['Sep 24','Elgin Public-Pope John','D1',16,14,'W'],
+['Sep 24','Nebraska Christian','C2',15,15,'W'],['Sep 28','Ord','C1',19,11,'W'],['Sep 29','Palmer','D1',10,20,'W'],
+['Oct 1','Osceola','D1',23,5,'W'],['Oct 5','Newman Grove/St. Edward','D1',4,25,'W'],['Oct 5','Madison','C1',1,29,'W'],
+['Oct 8','Twin Loup','D2',13,18,'W'],['Oct 8','Burwell','D2',5,22,'W'],['Oct 13','Ainsworth','D1',18,12,'W'],
+['Oct 13','Neligh-Oakdale','C2',13,18,'L'],['Oct 15','Palmer','D1',10,20,'W'],['Oct 17','Nebraska Christian','C2',15,15,'W'],
+['Oct 17','Central Valley','D1',29,1,'L'],['Oct 20','Clarkson','D1',19,12,'W'],['Oct 26','Fullerton','D1',6,19,'W']
+];
+const freshGames=()=>GAMES.map(([d,o,c,w,l,r])=>({d,o,c,w,l,r}));
+const state={sel:'W',games:freshGames(),over:{},win:{},pend:{'D1-7':'North Central','D1-10':'Red Cloud'}};
+
+function gamePts(g){const dv=div(g.w,g.l);return (g.r==='W'?WIN[dv]:LOSS[dv])+(BONUS[g.c]||0);}
+function rivCalc(tue){
+  let pts=0,w=0,l=0;
+  state.games.forEach(g=>{pts+=gamePts(g);g.r==='W'?w++:l++;});
+  let n=state.games.length;
+  if(tue){const win=tue==='W';const dv=div(win?16:17,win?15:14);pts+=win?WIN[dv]:LOSS[dv];n++;win?w++:l++;}
+  return {pts,n,w,l,avg:pts/n};
+}
+/* one D1 match: points depend on the other team's record after the match */
+function play(m,win,lose){
+  const W=m[win],L=m[lose];
+  const lAfter=div(L.w,L.l+1),wAfter=div(W.w+1,W.l);
+  W.tot+=WIN[lAfter];W.w++;W.g++;
+  L.tot+=LOSS[wAfter];L.l++;L.g++;
+}
+function baseMap(){
+  const m={};
+  D1.forEach(t=>{const g=t.w+t.l;m[t.n]={n:t.n,sd:t.sd,w:t.w,l:t.l,g,tot:Math.round(t.a*g)};});
+  const r=rivCalc(null);Object.assign(m['Riverside'],{w:r.w,l:r.l,g:r.n,tot:r.pts});
+  PEND.forEach(([a,b])=>play(m,a,b));
+  Object.keys(FIN).forEach(sd=>{const c=FIN[sd];if(!Array.isArray(c)){const w=state.pend[sd],x=c.pend;play(m,w,w===x[0]?x[1]:x[0]);}});
+  return m;
+}
+const finalists=sd=>{const c=FIN[sd];return Array.isArray(c)?c:[c.other,state.pend[sd]];};
+const mavg=x=>x.tot/x.g;
+function field(tue){
+  const m=baseMap();
+  const picks={};
+  SDS.forEach(sd=>{
+    const f=finalists(sd);let w;
+    if(sd==='D1-8')w=tue==='W'?'Riverside':ELGIN;
+    else if(f.includes(state.win[sd]))w=state.win[sd];
+    else w=mavg(m[f[0]])>=mavg(m[f[1]])?f[0]:f[1];
+    picks[sd]=w;
+  });
+  SDS.forEach(sd=>{const f=finalists(sd),w=picks[sd];play(m,w,f[0]===w?f[1]:f[0]);});
+  const r=rivCalc(tue);
+  const teams=D1.map(t=>{const x=m[t.n];const a=state.over[t.n]!==undefined?state.over[t.n]:mavg(x);return {n:t.n,sd:t.sd,w:x.w,l:x.l,a};});
+  const by=n=>teams.find(t=>t.n===n);
+  const winners=SDS.map(sd=>by(picks[sd]));
+  const pool=teams.filter(t=>!winners.includes(t)).sort((a,b)=>b.a-a.a);
+  const atl=pool.slice(0,4);
+  const seeds=winners.concat(atl).sort((a,b)=>b.a-a.a);
+  const riv=by('Riverside');
+  const idx=seeds.indexOf(riv);
+  let status,cushion,poolRank=pool.indexOf(riv)+1;
+  if(winners.includes(riv)){status='champ';}
+  else if(poolRank>0&&poolRank<=4){status='atlarge';cushion=riv.a-pool[4].a;}
+  else{status='out';cushion=pool[3].a-riv.a;}
+  return {r,seeds,pool,winners,atl,status,cushion,poolRank,seed:idx>=0?idx+1:null,picks};
+}
+function satInfo(f){
+  if(!f.seed)return null;
+  const opp=f.seeds[16-f.seed];
+  const dv=div(opp.w,opp.l);
+  const win=WIN[dv],loss=LOSS[dv];
+  const base=f.r;
+  return {opp,oppSeed:17-f.seed,dv,win,loss,avgW:(base.pts+win)/(base.n+1),avgL:(base.pts+loss)/(base.n+1),host:f.seed<17-f.seed};
+}
+
+if(typeof document!=='undefined'){
+  const $=s=>document.querySelector(s);
+  const f3=x=>x.toFixed(3),f4=x=>x.toFixed(4);
+  const sgn=x=>(x>=0?'+':'−')+Math.abs(x).toFixed(3);
+
+  function renderCards(){
+    $('#cards').innerHTML=['W','L'].map(t=>{
+      const f=field(t),r=f.r,d=r.avg-NOW_AVG;
+      let status,cls,seedline;
+      if(f.status==='champ'){status='Sub-district champion, in the field';cls='in';}
+      else if(f.status==='atlarge'){status='At-large: #'+f.poolRank+' of the non-winners';cls=f.cushion<0.15?'edge':'in';}
+      else{status='Misses the cut by '+f3(f.cushion);cls='out';}
+      if(f.seed){const s=satInfo(f);seedline='Seed '+f.seed+' of 16 &middot; '+(s.host?'hosts':'visits')+' #'+s.oppSeed+' '+s.opp.n;}
+      else seedline='Not in the district final field';
+      const cush=f.status==='atlarge'?'<div class="seedline">'+f3(f.cushion)+' above the first team out</div>':'';
+      return '<button class="card" type="button" data-t="'+t+'" aria-pressed="'+(state.sel===t)+'">'+
+        '<div class="lbl"><span>'+(t==='W'?'Win Tuesday':'Lose Tuesday')+'</span><span class="chip">'+(state.sel===t?'SHOWING':'TAP TO SHOW')+'</span></div>'+
+        '<div><span class="big">'+f3(r.avg)+'</span><span class="delta '+(d>=0?'up':'down')+'">'+sgn(d)+'</span></div>'+
+        '<div class="rec">Record '+r.w+'-'+r.l+' &middot; '+r.pts+' points over '+r.n+' matches</div>'+
+        '<div class="status '+cls+'">'+status+'</div>'+
+        '<div class="seedline">'+seedline+'</div>'+cush+'</button>';
+    }).join('');
+    document.querySelectorAll('.card').forEach(b=>b.addEventListener('click',()=>{state.sel=b.dataset.t;refresh();}));
+  }
+
+  function renderSat(){
+    const f=field(state.sel),s=satInfo(f);
+    if(!s){
+      $('#sat').innerHTML='<div class="kv"><span>Under this result Riverside is not in the 16-team field, so the season ends Tuesday.</span></div>';
+      return;
+    }
+    const dv=n=>['','1st','2nd','3rd','4th'][n];
+    $('#sat').innerHTML=
+      '<div class="kv"><span>Matchup</span><b>Seed '+f.seed+' vs seed '+s.oppSeed+' &middot; '+s.opp.n+'</b></div>'+
+      '<div class="kv"><span>Where</span><b>'+(s.host?'Riverside hosts (higher seed)':s.opp.n+' hosts (higher seed)')+'</b></div>'+
+      '<div class="kv"><span>Opponent</span><b>'+s.opp.w+'-'+s.opp.l+', '+dv(s.dv)+' division, '+f3(f.seeds[s.oppSeed-1].a)+' avg</b></div>'+
+      '<div class="kv"><span>A win adds '+s.win+' points</span><b>'+f3(s.avgW)+' average going into state seeding</b></div>'+
+      '<div class="kv"><span>A loss adds '+s.loss+' points</span><b>'+f3(s.avgL)+' average, season over</b></div>';
+  }
+
+  function renderField(){
+    const f=field(state.sel);
+    let html='';
+    for(let i=0;i<8;i++){
+      const a=f.seeds[i],b=f.seeds[15-i];
+      const tg=t=>f.winners.includes(t)?'<span class="tag">Winner</span>':'<span class="tag">At-large</span>';
+      const row=(t,sd)=>'<div class="side'+(t.n==='Riverside'?' riv':'')+'"><span class="sd">'+sd+'</span><span class="nm">'+t.n+tg(t)+
+        (sd===(i+1)?'<span class="tag host">Host</span>':'')+'<small>'+t.sd+' &middot; '+t.w+'-'+t.l+'</small></span><span class="av">'+f3(t.a)+'</span></div>';
+      html+='<div class="match">'+row(a,i+1)+row(b,16-i)+'</div>';
+    }
+    $('#matches').innerHTML=html;
+    const pool=f.pool.slice(0,7);
+    $('#pool').innerHTML=pool.map((t,i)=>'<li class="'+(t.n==='Riverside'?'riv ':'')+(i===3?'cut':'')+'"><span class="rk">'+(i+1)+'</span><span>'+t.n+'<span class="tag">'+t.sd+'</span></span><b>'+f3(t.a)+'</b></li>').join('');
+  }
+
+  function renderWinners(){
+    const m=baseMap();
+    $('#winners').innerHTML=SDS.map(sd=>{
+      const c=FIN[sd],fin=finalists(sd);
+      if(sd==='D1-8'){
+        return '<div class="win"><label>'+sd+' &middot; Cedar Rapids</label><div class="locked">Riverside vs Elgin Public-Pope John</div><span class="note">Winner set by the Tuesday card</span></div>';
+      }
+      const cur=state.win[sd]&&fin.includes(state.win[sd])?state.win[sd]:(mavg(m[fin[0]])>=mavg(m[fin[1]])?fin[0]:fin[1]);
+      let pend='';
+      if(!Array.isArray(c)){
+        pend='<label for="p-'+sd+'">'+c.pend[0]+' vs '+c.pend[1]+' (Monday)</label><select id="p-'+sd+'" data-pend="'+sd+'">'+
+          c.pend.map(n=>'<option value="'+n+'"'+(state.pend[sd]===n?' selected':'')+'>'+n+' won</option>').join('')+'</select>';
+      }
+      return '<div class="win"><label for="w-'+sd+'">'+sd+' final winner</label>'+pend+'<select id="w-'+sd+'" data-sd="'+sd+'">'+
+        fin.map(n=>'<option value="'+n+'"'+(cur===n?' selected':'')+'>'+n+' ('+f3(mavg(m[n]))+')</option>').join('')+'</select>'+
+        (NOTE[sd]?'<span class="note">'+NOTE[sd]+'</span>':'')+'</div>';
+    }).join('');
+    document.querySelectorAll('#winners select[data-sd]').forEach(s=>s.addEventListener('change',()=>{state.win[s.dataset.sd]=s.value;refresh();}));
+    document.querySelectorAll('#winners select[data-pend]').forEach(s=>s.addEventListener('change',()=>{state.pend[s.dataset.pend]=s.value;delete state.win[s.dataset.pend];renderAvgs();refresh();}));
+  }
+
+  function renderCalc(){
+    const rows=state.games.map((g,i)=>'<tr><td>'+g.d+'</td><td>'+g.o+'</td><td>'+g.c+'</td>'+
+      '<td><input type="number" min="0" max="40" inputmode="numeric" id="gw'+i+'" data-i="'+i+'" data-k="w" value="'+g.w+'" aria-label="Opponent wins"> - '+
+      '<input type="number" min="0" max="40" inputmode="numeric" id="gl'+i+'" data-i="'+i+'" data-k="l" value="'+g.l+'" aria-label="Opponent losses"></td>'+
+      '<td><span class="dv" id="gd'+i+'"></span></td><td>'+g.r+'</td><td class="n" id="gp'+i+'"></td></tr>').join('');
+    $('#calc').innerHTML='<thead><tr><th>Date</th><th>Opponent</th><th>Class</th><th>Their record</th><th>Div</th><th>Result</th><th class="n">Pts</th></tr></thead><tbody>'+rows+
+      '<tr class="pend"><td>Oct 27</td><td>'+ELGIN+'</td><td>D1</td><td id="tuerec"></td><td><span class="dv">2</span></td><td id="tueres"></td><td class="n" id="tuepts"></td></tr></tbody>'+
+      '<tfoot><tr><td colspan="6">Total and average</td><td class="n" id="ctot"></td></tr><tr><td colspan="6" id="cavgnote">NSAA average now</td><td class="n" id="cavg"></td></tr></tfoot>';
+    document.querySelectorAll('#calc input').forEach(inp=>inp.addEventListener('change',()=>{
+      const v=Math.max(0,parseInt(inp.value,10)||0);inp.value=v;state.games[+inp.dataset.i][inp.dataset.k]=v;refresh();
+    }));
+  }
+  function updateCalc(){
+    state.games.forEach((g,i)=>{$('#gd'+i).textContent=div(g.w,g.l);$('#gp'+i).textContent=gamePts(g);});
+    const r=rivCalc(state.sel),win=state.sel==='W';
+    $('#tuerec').textContent=(win?'16-15':'17-14')+' after';
+    $('#tueres').textContent=win?'W (shown card)':'L (shown card)';
+    $('#tuepts').textContent=win?WIN[div(16,15)]:LOSS[div(17,14)];
+    $('#ctot').textContent=r.pts;
+    $('#cavgnote').textContent='Average with the Tuesday result above ('+r.n+' matches)';
+    $('#cavg').textContent=f4(r.avg);
+  }
+
+  function renderAvgs(){
+    const m=baseMap();
+    const rows=D1.slice().sort((a,b)=>mavg(m[b.n])-mavg(m[a.n])).map(t=>{
+      const x=m[t.n];
+      const cell=t.n==='Riverside'?'<span class="hint">calculated</span>':'<input class="avg" type="number" step="0.0001" inputmode="decimal" id="av-'+t.n.replace(/[^A-Za-z0-9]/g,'')+'" data-n="'+t.n+'" data-base="'+mavg(x)+'" value="'+(state.over[t.n]!==undefined?state.over[t.n].toFixed(4):mavg(x).toFixed(4))+'" aria-label="Average for '+t.n+'">';
+      return '<tr><td>'+t.n+'</td><td>'+t.sd+'</td><td>'+x.w+'-'+x.l+'</td><td class="n">'+cell+'</td></tr>';
+    }).join('');
+    $('#avgs').innerHTML='<thead><tr><th>Team</th><th>Sub</th><th>Record</th><th class="n">Average after Monday</th></tr></thead><tbody>'+rows+'</tbody>';
+    document.querySelectorAll('#avgs input').forEach(inp=>inp.addEventListener('change',()=>{
+      const n=inp.dataset.n,base=parseFloat(inp.dataset.base),v=parseFloat(inp.value);
+      if(isNaN(v)||Math.abs(v-base)<1e-4){delete state.over[n];inp.value=base.toFixed(4);}else state.over[n]=v;
+      refresh();
+    }));
+  }
+
+  function refresh(){renderCards();renderSat();renderField();renderWinners();updateCalc();}
+  $('#resetgames').addEventListener('click',()=>{state.games=freshGames();renderCalc();renderAvgs();refresh();});
+  $('#resetavgs').addEventListener('click',()=>{state.over={};state.win={};state.pend={'D1-7':'North Central','D1-10':'Red Cloud'};renderAvgs();refresh();});
+  renderCalc();renderAvgs();refresh();
+}
+</script>
+</body>
+
+</html>
