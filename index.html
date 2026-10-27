@@ -119,7 +119,7 @@ a{color:inherit}
   <header>
     <p class="eyebrow">Class D1 volleyball &middot; Wildcard points</p>
     <h1>Riverside Chargers</h1>
-    <p class="sub">NSAA numbers as of Mon Oct 26, 10:00 pm CT, plus six Monday results NSAA had not entered yet. Riverside beat Fullerton in the opener. The sub-district final is Tue Oct 27 against Elgin Public-Pope John at Cedar Rapids.</p>
+    <p class="sub">NSAA numbers as of Mon Oct 26, 10:00 pm CT, plus Monday results NSAA had not entered yet. Riverside beat Fullerton in the opener. The sub-district final is Tue Oct 27 against Elgin Public-Pope John at Cedar Rapids.</p>
   </header>
 
   <section>
@@ -175,8 +175,9 @@ a{color:inherit}
       <ul>
         <li>Averages and records come from NSAA as of 10:00 pm Monday.</li>
         <li>Six Monday results were not in NSAA yet and were added from your score photos: BDS over Deshler, Tri County over Diller-Odell, Cambridge over Dundy County Stratton, Wauneta-Palisade over Southwest, Loomis over Arapahoe, and Axtell over Southern Valley.</li>
-        <li>North Central vs Creighton (D1-7) and Red Cloud vs Axtell (D1-10) were not in the photos or in NSAA. Pick the Monday winner in those two sub-district cards.</li>
-        <li>ScoreFeed and NSAA disagree on two matches. ScoreFeed has Falls City Sacred Heart beating Humboldt-Table Rock-Steinauer and Kimball beating Garden County. NSAA has the opposite in both, and NSAA's own Tuesday bracket lists Garden County vs Bayard. This page follows NSAA.</li>
+        <li>You reported that North Central beat Creighton (D1-7) and Red Cloud beat Axtell (D1-10). Neither was in NSAA yet, so both are added here.</li>
+        <li>NSAA currently shows Humboldt-Table Rock-Steinauer beating Falls City Sacred Heart. You said Falls City won, so this page reverses it.</li>
+        <li>ScoreFeed shows Kimball beating Garden County. NSAA has Garden County, and NSAA's Tuesday bracket lists Garden County vs Bayard, so this page follows NSAA.</li>
         <li>Each Tuesday final adds one match to both finalists' averages, using the other team's record after the match.</li>
       </ul>
     </div>
@@ -223,13 +224,12 @@ const D1=TEAMS.map(([n,sd,w,l,a])=>({n,sd,w,l,a}));
 const PEND=[[BDS,'Deshler'],['Tri County','Diller-Odell'],['Cambridge','Dundy County Stratton'],['Wauneta-Palisade','Southwest'],['Loomis','Arapahoe'],['Axtell','Southern Valley']];
 /* Tuesday finalists per sub-district. D1-7 and D1-10 still have one Monday match nobody reported. */
 const FIN={
- 'D1-1':['Lourdes Central Catholic','Humboldt-Table Rock-Steinauer'],'D1-2':['Tri County',BDS],'D1-3':['Exeter-Milligan-Friend','Nebraska Lutheran'],
+ 'D1-1':['Lourdes Central Catholic','Falls City Sacred Heart'],'D1-2':['Tri County',BDS],'D1-3':['Exeter-Milligan-Friend','Nebraska Lutheran'],
  'D1-4':['Osceola','Aquinas Catholic'],'D1-5':['Clarkson','Leigh'],'D1-6':['Bloomfield',TCNE],
- 'D1-7':{other:'Ainsworth',pend:['North Central','Creighton']},'D1-8':['Riverside',ELGIN],'D1-9':['Amherst','Central Valley'],
- 'D1-10':{other:'Loomis',pend:['Red Cloud','Axtell']},'D1-11':['Cambridge','Wauneta-Palisade'],'D1-12':['Garden County','Bayard']
+ 'D1-7':['Ainsworth','North Central'],'D1-8':['Riverside',ELGIN],'D1-9':['Amherst','Central Valley'],
+ 'D1-10':['Loomis','Red Cloud'],'D1-11':['Cambridge','Wauneta-Palisade'],'D1-12':['Garden County','Bayard']
 };
-const NOTE={'D1-1':'ScoreFeed shows Falls City Sacred Heart winning. NSAA has Humboldt-Table Rock-Steinauer.','D1-12':'ScoreFeed shows Kimball beating Garden County. NSAA has Garden County.',
- 'D1-7':'North Central vs Creighton was not reported. Pick the Monday winner.','D1-10':'Red Cloud vs Axtell was not reported. Pick the Monday winner.'};
+const NOTE={'D1-12':'ScoreFeed shows Kimball beating Garden County. NSAA has Garden County.'};
 const GAMES=[
 ['Aug 27','Chambers-Wheeler Central','D2',17,13,'W'],['Sep 1','High Plains Community','D2',10,19,'W'],['Sep 1','Twin River','D1',11,20,'W'],
 ['Sep 3','Fullerton','D1',6,19,'W'],['Sep 3','Central Valley','D1',29,1,'L'],['Sep 8','Grand Island Lutheran','D2',16,12,'W'],
@@ -265,6 +265,11 @@ function baseMap(){
   D1.forEach(t=>{const g=t.w+t.l;m[t.n]={n:t.n,sd:t.sd,w:t.w,l:t.l,g,tot:Math.round(t.a*g)};});
   const r=rivCalc(null);Object.assign(m['Riverside'],{w:r.w,l:r.l,g:r.n,tot:r.pts});
   PEND.forEach(([a,b])=>play(m,a,b));
+  /* NSAA has Falls City Sacred Heart losing to Humboldt-Table Rock-Steinauer. Jim reports Falls City won, so reverse it. */
+  const H='Humboldt-Table Rock-Steinauer',F='Falls City Sacred Heart';
+  m[H].tot-=47;m[H].w--;m[H].g--;m[F].tot-=33;m[F].l--;m[F].g--;play(m,F,H);
+  /* Reported by Jim, not yet in NSAA */
+  play(m,'North Central','Creighton');play(m,'Red Cloud','Axtell');
   Object.keys(FIN).forEach(sd=>{const c=FIN[sd];if(!Array.isArray(c)){const w=state.pend[sd],x=c.pend;play(m,w,w===x[0]?x[1]:x[0]);}});
   return m;
 }
