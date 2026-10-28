@@ -119,23 +119,28 @@ a{color:inherit}
   <header>
     <p class="eyebrow">Class D1 volleyball &middot; Wildcard points</p>
     <h1>Riverside Chargers</h1>
-    <p class="sub">NSAA numbers as of Mon Oct 26, 10:00 pm CT, plus Monday results NSAA had not entered yet. Riverside beat Fullerton in the opener. The sub-district final is Tue Oct 27 against Elgin Public-Pope John at Cedar Rapids.</p>
+    <p class="sub">NSAA numbers as of Mon Oct 26, 10:00 pm CT, plus results NSAA had not entered yet. Riverside beat Elgin Public-Pope John in the D1-8 final Tuesday and is in the 16-team district final field. Fill in the other sub-district winners below as they come in.</p>
   </header>
 
   <section>
-    <h2>Tuesday vs Elgin</h2>
+    <h2>Riverside's result</h2>
     <div class="cards" id="cards"></div>
-    <p class="hint">Tap a card to run the rest of the page under that result. Both cards assume the highest-rated team wins every other sub-district, which you can change below.</p>
+    <p class="hint">Includes Nebraska Christian's loss to Kenesaw, which moved two of Riverside's wins from 49 points to 46 each.</p>
   </section>
 
   <section>
-    <h2>Saturday district final</h2>
+    <h2>Who could Riverside host?</h2>
+    <div class="panel" id="range"></div>
+  </section>
+
+  <section>
+    <h2>Saturday district final (projected)</h2>
     <div class="panel" id="sat"></div>
   </section>
 
   <section>
     <h2>The 16-team field</h2>
-    <p class="hint">12 sub-district winners plus the 4 best averages among everyone else. Seeded by average, 1 plays 16, 2 plays 15, and the higher seed hosts.</p>
+    <p class="hint">12 sub-district winners plus the 4 best averages among everyone else. Seeded by average, 1 plays 16, 2 plays 15, and the higher seed hosts. Any final left on Not decided yet is projected with the higher-rated team winning.</p>
     <div class="matches" id="matches"></div>
   </section>
 
@@ -147,7 +152,7 @@ a{color:inherit}
 
   <section>
     <h2>Sub-district winners</h2>
-    <p class="hint">Only teams still alive after Monday are listed. Pick who wins Tuesday's final. Riverside's sub-district follows the Tuesday card you selected.</p>
+    <p class="hint">Pick the winner of each sub-district final as results come in. Leave a final on Not decided yet to see every team Riverside could host. D1-6 and D1-8 are final.</p>
     <div class="winners" id="winners"></div>
   </section>
 
@@ -178,6 +183,7 @@ a{color:inherit}
         <li>You reported that North Central beat Creighton (D1-7) and Red Cloud beat Axtell (D1-10). Neither was in NSAA yet, so both are added here.</li>
         <li>NSAA currently shows Humboldt-Table Rock-Steinauer beating Falls City Sacred Heart. You said Falls City won, so this page reverses it.</li>
         <li>ScoreFeed shows Kimball beating Garden County. NSAA has Garden County, and NSAA's Tuesday bracket lists Garden County vs Bayard, so this page follows NSAA.</li>
+        <li>You reported Tuesday: Riverside beat Elgin, Bloomfield beat Tri County Northeast, and Nebraska Christian lost to Kenesaw.</li>
         <li>Each Tuesday final adds one match to both finalists' averages, using the other team's record after the match.</li>
       </ul>
     </div>
@@ -236,14 +242,15 @@ const GAMES=[
 ['Sep 8','Elba','D2',20,9,'W'],['Sep 10','Arcadia/Loup City','C2',17,13,'W'],['Sep 12','Humphrey-Lindsay','C2',20,12,'W'],
 ['Sep 12','Tri County','D1',21,8,'L'],['Sep 12','Kenesaw','C2',22,7,'W'],['Sep 15','Leigh','D1',20,10,'W'],
 ['Sep 15','Stuart','D2',11,20,'W'],['Sep 17','Archangels Catholic','D2',16,13,'W'],['Sep 24','Elgin Public-Pope John','D1',16,14,'W'],
-['Sep 24','Nebraska Christian','C2',15,15,'W'],['Sep 28','Ord','C1',19,11,'W'],['Sep 29','Palmer','D1',10,20,'W'],
+['Sep 24','Nebraska Christian','C2',15,16,'W'],['Sep 28','Ord','C1',19,11,'W'],['Sep 29','Palmer','D1',10,20,'W'],
 ['Oct 1','Osceola','D1',23,5,'W'],['Oct 5','Newman Grove/St. Edward','D1',4,25,'W'],['Oct 5','Madison','C1',1,29,'W'],
 ['Oct 8','Twin Loup','D2',13,18,'W'],['Oct 8','Burwell','D2',5,22,'W'],['Oct 13','Ainsworth','D1',18,12,'W'],
-['Oct 13','Neligh-Oakdale','C2',13,18,'L'],['Oct 15','Palmer','D1',10,20,'W'],['Oct 17','Nebraska Christian','C2',15,15,'W'],
+['Oct 13','Neligh-Oakdale','C2',13,18,'L'],['Oct 15','Palmer','D1',10,20,'W'],['Oct 17','Nebraska Christian','C2',15,16,'W'],
 ['Oct 17','Central Valley','D1',29,1,'L'],['Oct 20','Clarkson','D1',19,12,'W'],['Oct 26','Fullerton','D1',6,19,'W']
 ];
 const freshGames=()=>GAMES.map(([d,o,c,w,l,r])=>({d,o,c,w,l,r}));
-const state={sel:'W',games:freshGames(),over:{},win:{},pend:{'D1-7':'North Central','D1-10':'Red Cloud'}};
+const LOCKED={'D1-6':'Bloomfield','D1-8':'Riverside'};
+const state={sel:'W',games:freshGames(),over:{},win:Object.assign({},LOCKED),pend:{'D1-7':'North Central','D1-10':'Red Cloud'}};
 
 function gamePts(g){const dv=div(g.w,g.l);return (g.r==='W'?WIN[dv]:LOSS[dv])+(BONUS[g.c]||0);}
 function rivCalc(tue){
@@ -280,7 +287,8 @@ function field(tue){
   const picks={};
   SDS.forEach(sd=>{
     const f=finalists(sd);let w;
-    if(sd==='D1-8')w=tue==='W'?'Riverside':ELGIN;
+    if(sd==='D1-8')w='Riverside';
+    else if(LOCKED[sd])w=LOCKED[sd];
     else if(f.includes(state.win[sd]))w=state.win[sd];
     else w=mavg(m[f[0]])>=mavg(m[f[1]])?f[0]:f[1];
     picks[sd]=w;
@@ -316,7 +324,7 @@ if(typeof document!=='undefined'){
   const sgn=x=>(x>=0?'+':'−')+Math.abs(x).toFixed(3);
 
   function renderCards(){
-    $('#cards').innerHTML=['W','L'].map(t=>{
+    $('#cards').innerHTML=['W'].map(t=>{
       const f=field(t),r=f.r,d=r.avg-NOW_AVG;
       let status,cls,seedline;
       if(f.status==='champ'){status='Sub-district champion, in the field';cls='in';}
@@ -326,7 +334,7 @@ if(typeof document!=='undefined'){
       else seedline='Not in the district final field';
       const cush=f.status==='atlarge'?'<div class="seedline">'+f3(f.cushion)+' above the first team out</div>':'';
       return '<button class="card" type="button" data-t="'+t+'" aria-pressed="'+(state.sel===t)+'">'+
-        '<div class="lbl"><span>'+(t==='W'?'Win Tuesday':'Lose Tuesday')+'</span><span class="chip">'+(state.sel===t?'SHOWING':'TAP TO SHOW')+'</span></div>'+
+        '<div class="lbl"><span>'+'Beat Elgin, Tuesday'+'</span><span class="chip">'+'FINAL'+'</span></div>'+
         '<div><span class="big">'+f3(r.avg)+'</span><span class="delta '+(d>=0?'up':'down')+'">'+sgn(d)+'</span></div>'+
         '<div class="rec">Record '+r.w+'-'+r.l+' &middot; '+r.pts+' points over '+r.n+' matches</div>'+
         '<div class="status '+cls+'">'+status+'</div>'+
@@ -350,6 +358,31 @@ if(typeof document!=='undefined'){
       '<div class="kv"><span>A loss adds '+s.loss+' points</span><b>'+f3(s.avgL)+' average, season over</b></div>';
   }
 
+  function renderRange(){
+    const undec=SDS.filter(sd=>!LOCKED[sd]&&!(state.win[sd]&&finalists(sd).includes(state.win[sd])));
+    const saved=Object.assign({},state.win),counts={},seeds={},oseeds={};let n=0;
+    for(let mask=0;mask<(1<<undec.length);mask++){
+      undec.forEach((sd,i)=>{state.win[sd]=finalists(sd)[(mask>>i)&1];});
+      const f=field('W'),s=satInfo(f);n++;
+      counts[s.opp.n]=(counts[s.opp.n]||0)+1;seeds[f.seed]=(seeds[f.seed]||0)+1;oseeds[s.oppSeed]=(oseeds[s.oppSeed]||0)+1;
+    }
+    state.win=saved;
+    const keys=o=>Object.keys(o).map(Number).sort((a,b)=>a-b);
+    const sd=keys(seeds),os=keys(oseeds);
+    const list=a=>a.length>1?a.slice(0,-1).join(', ')+' or '+a[a.length-1]:String(a[0]);
+    let h='<div class="kv"><span>Riverside seed</span><b>#'+list(sd)+' of 16, hosts the #'+list(os)+' seed</b></div>';
+    if(undec.length===0){
+      h+='<div class="kv"><span>Opponent</span><b>'+Object.keys(counts)[0]+'</b></div>';
+    }else{
+      const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+      h+='<div class="kv"><span>Finals left undecided</span><b>'+undec.length+' ('+n+' combinations)</b></div>'+
+        '<div class="scroll"><table style="min-width:0"><thead><tr><th>Possible opponent</th><th class="n">Share of combinations</th></tr></thead><tbody>'+
+        rows.map(([k,c])=>'<tr><td>'+k+'</td><td class="n">'+(100*c/n).toFixed(1)+'%</td></tr>').join('')+'</tbody></table></div>'+
+        '<p class="note">Shares count combinations of results. They are not win odds.</p>';
+    }
+    $('#range').innerHTML=h;
+  }
+
   function renderField(){
     const f=field(state.sel);
     let html='';
@@ -369,20 +402,20 @@ if(typeof document!=='undefined'){
     const m=baseMap();
     $('#winners').innerHTML=SDS.map(sd=>{
       const c=FIN[sd],fin=finalists(sd);
-      if(sd==='D1-8'){
-        return '<div class="win"><label>'+sd+' &middot; Cedar Rapids</label><div class="locked">Riverside vs Elgin Public-Pope John</div><span class="note">Winner set by the Tuesday card</span></div>';
+      if(LOCKED[sd]){
+        return '<div class="win"><label>'+sd+' final</label><div class="locked">'+LOCKED[sd]+' won</div><span class="note">Reported final</span></div>';
       }
-      const cur=state.win[sd]&&fin.includes(state.win[sd])?state.win[sd]:(mavg(m[fin[0]])>=mavg(m[fin[1]])?fin[0]:fin[1]);
+      const cur=state.win[sd]&&fin.includes(state.win[sd])?state.win[sd]:'';
       let pend='';
       if(!Array.isArray(c)){
         pend='<label for="p-'+sd+'">'+c.pend[0]+' vs '+c.pend[1]+' (Monday)</label><select id="p-'+sd+'" data-pend="'+sd+'">'+
           c.pend.map(n=>'<option value="'+n+'"'+(state.pend[sd]===n?' selected':'')+'>'+n+' won</option>').join('')+'</select>';
       }
-      return '<div class="win"><label for="w-'+sd+'">'+sd+' final winner</label>'+pend+'<select id="w-'+sd+'" data-sd="'+sd+'">'+
+      return '<div class="win"><label for="w-'+sd+'">'+sd+' final winner</label>'+pend+'<select id="w-'+sd+'" data-sd="'+sd+'"><option value=""'+(cur===''?' selected':'')+'>Not decided yet</option>'+
         fin.map(n=>'<option value="'+n+'"'+(cur===n?' selected':'')+'>'+n+' ('+f3(mavg(m[n]))+')</option>').join('')+'</select>'+
         (NOTE[sd]?'<span class="note">'+NOTE[sd]+'</span>':'')+'</div>';
     }).join('');
-    document.querySelectorAll('#winners select[data-sd]').forEach(s=>s.addEventListener('change',()=>{state.win[s.dataset.sd]=s.value;refresh();}));
+    document.querySelectorAll('#winners select[data-sd]').forEach(s=>s.addEventListener('change',()=>{if(s.value)state.win[s.dataset.sd]=s.value;else delete state.win[s.dataset.sd];refresh();}));
     document.querySelectorAll('#winners select[data-pend]').forEach(s=>s.addEventListener('change',()=>{state.pend[s.dataset.pend]=s.value;delete state.win[s.dataset.pend];renderAvgs();refresh();}));
   }
 
@@ -402,7 +435,7 @@ if(typeof document!=='undefined'){
     state.games.forEach((g,i)=>{$('#gd'+i).textContent=div(g.w,g.l);$('#gp'+i).textContent=gamePts(g);});
     const r=rivCalc(state.sel),win=state.sel==='W';
     $('#tuerec').textContent=(win?'16-15':'17-14')+' after';
-    $('#tueres').textContent=win?'W (shown card)':'L (shown card)';
+    $('#tueres').textContent=win?'W (final)':'L';
     $('#tuepts').textContent=win?WIN[div(16,15)]:LOSS[div(17,14)];
     $('#ctot').textContent=r.pts;
     $('#cavgnote').textContent='Average with the Tuesday result above ('+r.n+' matches)';
@@ -424,9 +457,9 @@ if(typeof document!=='undefined'){
     }));
   }
 
-  function refresh(){renderCards();renderSat();renderField();renderWinners();updateCalc();}
+  function refresh(){renderCards();renderRange();renderSat();renderField();renderWinners();updateCalc();}
   $('#resetgames').addEventListener('click',()=>{state.games=freshGames();renderCalc();renderAvgs();refresh();});
-  $('#resetavgs').addEventListener('click',()=>{state.over={};state.win={};state.pend={'D1-7':'North Central','D1-10':'Red Cloud'};renderAvgs();refresh();});
+  $('#resetavgs').addEventListener('click',()=>{state.over={};state.win=Object.assign({},LOCKED);state.pend={'D1-7':'North Central','D1-10':'Red Cloud'};renderAvgs();refresh();});
   renderCalc();renderAvgs();refresh();
 }
 </script>
